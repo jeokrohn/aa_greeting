@@ -268,7 +268,7 @@ async def main():
                 r = f'{result}'
             else:
                 r = 'ok'
-            print(f'{aa.location_name}:{aa.name}: {r}', file=sys.stderr)
+            print(f'{aa_str(aa)}: {r}', file=sys.stderr)
     return
 
 
