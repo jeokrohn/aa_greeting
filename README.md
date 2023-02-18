@@ -65,7 +65,7 @@ To build the Docker image execute:
 
 Then the script can be executed using: 
 
-    docker run aa_greeting --help
+    docker run --rm aa_greeting --help
 
 The Docker image does not contain a `.env` file. Hence the token has to be passed using the `--token` parameter or 
 the token can be put in a local `.env` file and the local directory then is mapped to the `/home` directory using 
@@ -74,7 +74,7 @@ documentation.
 
 Here's an example of how to map the current directory (referenced by `$PWD`) into the container's `/home` directory: 
     
-    docker run -v $PWD:/home aa_greeting business default ".*"
+    docker run --rm -v $PWD:/home aa_greeting business default ".*"
 
 Mapping the local directory into the Docker container also provides direct access to the log file created by the 
 script 
