@@ -39,7 +39,7 @@ from wxc_sdk.telephony.autoattendant import AutoAttendant, AutoAttendantAudioFil
 
 
 def aa_str(aa: AutoAttendant):
-    return f'"{aa.location_name}:{aa.name}"'
+    return f'({aa.location_name}:{aa.name})'
 
 
 async def upload_aa_greeting(*, access_token: str, org_id: str, location_id: str, aa_id: str,
