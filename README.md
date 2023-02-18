@@ -80,3 +80,18 @@ Mapping the local directory into the Docker container also provides direct acces
 script 
 running in the container. Without mapping a local directory into the container the log file is created in the 
 filesystem within the container.
+
+If you want to upload a greeting file then the file has to be accessible from within the container. The easiest way 
+to achieve this is to have the greeting available in the current directory on the host, map the current directory 
+into the container, and then reference the greeting without a path:
+
+    docker run --rm -v $PWD:/home aa_greeting business sample.wav ".*"
+
+The shell script `aa_greeting.sh` simplifies usage of the docker image. The script reads am existing `.env` file, 
+passes the token defined in either the `.env` file or set in `WEBEX_TOKEN`, maps the current directory into `/home` 
+in the container and passes all parameters provided to the script.
+
+This is an example of how to use the script to upload a greeting from the current directory and set that on all auto 
+attendants as the business hour greeting:
+
+    ./aa_greeting.sh business sample.wav ".*"

@@ -31,7 +31,7 @@ from aiohttp import FormData, ClientSession
 from dotenv import load_dotenv
 
 from wxc_sdk.as_api import AsWebexSimpleApi
-from wxc_sdk.as_rest import as_dump_response
+from wxc_sdk.as_rest import as_dump_response, AsRestError
 from wxc_sdk.base import webex_id_to_uuid
 from wxc_sdk.common import Greeting, MediaFileType
 from wxc_sdk.locations import Location
@@ -236,7 +236,15 @@ async def main():
         exit(1)
 
     async with AsWebexSimpleApi(tokens=token) as api:
-        aa_name = args.aaname
+        try:
+            org_id = (await api.people.me()).org_id
+        except AsRestError as e:
+            if e.status == 401:
+                print(f'Invalid token. Got "Unauthorized" when trying to determine org id.', file=sys.stderr)
+                exit(1)
+            else:
+                raise
+
         picker = AAPicker(api=api, aa_specs=args.aaname)
         aa_list = await picker.pick()
 
@@ -250,7 +258,6 @@ async def main():
         print(file=sys.stderr)
 
         # update AAs concurrently
-        org_id = (await api.people.me()).org_id
         results = await asyncio.gather(*[update_aa(api=api, org_id=org_id, aa=aa, menu=menu, greeting=greeting) for aa
                                          in aa_list],
                                        return_exceptions=True)
