@@ -1,0 +1,3 @@
+# Sample .env file to set the WEBEX_TOKEN
+# rename to ".env" and insert your webex developer token below
+WEBEX_TOKEN=put your token here
