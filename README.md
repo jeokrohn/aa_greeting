@@ -40,10 +40,11 @@ Developer tokens have a lifetime of 12 hours. After that a new developer token h
 ## Using the script with Python installed
 
 If Python (script built and tested with Python 3.10) is installed the requirements for the script can be installed 
-using `pip 
-install -r 
-requirements.txt`. 
-Then the script can be called using the above syntax. When executed the script generates a log with `aa_greeting.log` 
+via: 
+
+    pip install -r requirements.txt
+
+Then the script can be called using the above syntax. When executed the script generates a log `aa_greeting.log` 
 in the current directory which allows to analyze all API calls executed by the script.
 
 This example will reset the business hours greetings of all auto attendants to the default greeting:
@@ -71,7 +72,7 @@ the token can be put in a local `.env` file and the local directory then is mapp
 the `-v` parameter of `docker run`. See https://docs.docker.com/engine/reference/commandline/run/#volume for 
 documentation.
 
-Here's an example of how to map the current directory (referenced by `$PWD`) into the container `/home` directory: 
+Here's an example of how to map the current directory (referenced by `$PWD`) into the container's `/home` directory: 
     
     docker run -v $PWD:/home aa_greeting business default ".*"
 
