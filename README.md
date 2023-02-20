@@ -7,14 +7,15 @@ This script can be used to update business hours of after hours greeting setting
     positional arguments:
       menu           "business" or "after_hours"
       greeting       greeting file or "default"
-      aaname         name of AA to modify. An be a tuple with location name and AA name like "location:aa1". Also
-                     the AA name can be a regular expression. For example "location:.*" would catch all AAs in given
-                     location. Multiple AA name specs can be given.
-
-    optional arguments:
+      aaname         name of AA to modify. An be a tuple with location name and AA name like "location:aa1". Also the AA name can be a regular expression.
+                     For example "location:.*" would catch all AAs in given location. Multiple AA name specs can be given.
+    
+    options:
       -h, --help     show this help message and exit
-      --token TOKEN  access token. If not provided will be read from "WEBEX_TOKEN environment variable
-
+      --token TOKEN  access token. If not provided will be read from "WEBEX_TOKEN environment variable.
+      --test         Don't apply changes
+      --reupload     re-upload greeting even if greeting with same name already exists.
+    
 ## Authorization
 
 The script uses an undocumented endpoint to upload auto attendant greetings. This endpoint requires an access token 
@@ -26,7 +27,7 @@ Steps to get a developer token:
 1) Navigate to https://developer.webex.com
 2) Log in using the "Log In" option in the top right
 3) Select "Documentation"
-4) Scoll down in the list on the left and select "Getting Started" under "APIs"
+4) Scroll down in the list on the left and select "Getting Started" under "APIs"
 5) Copy the access token by selecting the copy icon under "Your Personal Access Token"
 
 The developer token can be:

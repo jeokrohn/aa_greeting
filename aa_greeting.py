@@ -7,13 +7,14 @@ Update greeting settings for a number of auto attendants
     positional arguments:
       menu           "business" or "after_hours"
       greeting       greeting file or "default"
-      aaname         name of AA to modify. An be a tuple with location name and AA name like "location:aa1". Also
-                     the AA name can be a regular expression. For example "location:.*" would catch all AAs in given
-                     location. Multiple AA name specs can be given.
+      aaname         name of AA to modify. An be a tuple with location name and AA name like "location:aa1". Also the AA name can be a regular expression.
+                     For example "location:.*" would catch all AAs in given location. Multiple AA name specs can be given.
 
-    optional arguments:
+    options:
       -h, --help     show this help message and exit
-      --token TOKEN  access token. If not provided will be read from "WEBEX_TOKEN environment variable
+      --token TOKEN  access token. If not provided will be read from "WEBEX_TOKEN environment variable.
+      --test         Don't apply changes
+      --reupload     re-upload greeting even if greeting with same name already exists.
 """
 import argparse
 import asyncio
@@ -149,7 +150,8 @@ class AAPicker:
         return aa_list
 
 
-async def update_aa(*, api: AsWebexSimpleApi, org_id: str, aa: AutoAttendant, menu: str, greeting: str):
+async def update_aa(*, api: AsWebexSimpleApi, org_id: str, aa: AutoAttendant, menu: str, greeting: str,
+                    test: bool, re_upload: bool):
     """
     Update a single AA
     """
@@ -175,40 +177,50 @@ async def update_aa(*, api: AsWebexSimpleApi, org_id: str, aa: AutoAttendant, me
             return
         update_menu.greeting = Greeting.default
     else:
+        # custom
         basename = os.path.basename(greeting)
-        if update_menu.greeting == Greeting.custom and update_menu.audio_file.name == basename:
-            # custom greeting with same file name already set
-            info('nothing to do')
-            return
-
         # upload greeting if needed
-        if update_menu.audio_file and update_menu.audio_file.name == basename:
+        if update_menu.audio_file and update_menu.audio_file.name == basename and not re_upload:
             info(f'greeting "{basename}" already uploaded')
         else:
-            await upload_aa_greeting(access_token=api.access_token,
-                                     org_id=org_id,
-                                     location_id=aa.location_id,
-                                     aa_id=aa.auto_attendant_id,
-                                     business=menu == 'business',
-                                     path=greeting)
-            info(f'uploaded new greeting "{basename}"')
+            if test:
+                info(f'skipped: upload greeting "{basename}"')
+            else:
+                await upload_aa_greeting(access_token=api.access_token,
+                                         org_id=org_id,
+                                         location_id=aa.location_id,
+                                         aa_id=aa.auto_attendant_id,
+                                         business=menu == 'business',
+                                         path=greeting)
+                info(f'uploaded new greeting "{basename}"')
+
+        if update_menu.greeting == Greeting.custom:
+            # already set
+            info('custom greeting already set')
+            return
 
         # set to uploaded greeting
         update_menu.greeting = Greeting.custom
         update_menu.audio_file = AutoAttendantAudioFile(name=basename,
                                                         media_type=MediaFileType.wav)
     # apply update
-    await api.telephony.auto_attendant.update(location_id=aa.location_id,
-                                              auto_attendant_id=aa.auto_attendant_id,
-                                              settings=update,
-                                              org_id=org_id)
-    info(f'updated settings')
+    if test:
+        info('skipped: update')
+    else:
+        await api.telephony.auto_attendant.update(location_id=aa.location_id,
+                                                  auto_attendant_id=aa.auto_attendant_id,
+                                                  settings=update,
+                                                  org_id=org_id)
+        info(f'updated settings')
 
 
 async def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--token', type=str, help='access token. If not provided will be read from "WEBEX_TOKEN '
-                                                  'environment variable')
+                                                  'environment variable.')
+    parser.add_argument('--test', action='store_true', help='Don\'t apply changes')
+    parser.add_argument('--reupload', action='store_true', help='re-upload greeting even if greeting with same name '
+                                                                'already exists.')
     parser.add_argument('menu', type=str, help='"business" or "after_hours"')
     parser.add_argument('greeting', type=str, help='greeting file or "default"')
     parser.add_argument('aaname', type=str, help='name of AA to modify. An be a tuple with location name and AA name '
@@ -218,11 +230,16 @@ async def main():
                         nargs=argparse.REMAINDER)
     args = parser.parse_args()
     load_dotenv()
+
     token = args.token or os.getenv('WEBEX_TOKEN')
     if token is None:
         print('Need to provide an access token using --token or set one in the WEBEX_TOKEN environment variable',
               file=sys.stderr)
         exit(1)
+
+    test = args.test
+    re_upload = args.reupload
+
     menu = args.menu.lower()
     if menu not in ('business', 'after_hours'):
         print(f'Invalid argument for menu "{menu}". Allowed: business, after_hours', file=sys.stderr)
@@ -233,6 +250,10 @@ async def main():
         greeting = 'default'
     elif not isfile(greeting):
         print(f'File not found: {greeting}', file=sys.stderr)
+        exit(1)
+
+    if any(aa_spec.lower() in ('--test', '--reupload') for aa_spec in args.aaname):
+        print('--test and --reupload need to be passed before the list of AA specs', file=sys.stderr)
         exit(1)
 
     async with AsWebexSimpleApi(tokens=token) as api:
@@ -258,8 +279,9 @@ async def main():
         print(file=sys.stderr)
 
         # update AAs concurrently
-        results = await asyncio.gather(*[update_aa(api=api, org_id=org_id, aa=aa, menu=menu, greeting=greeting) for aa
-                                         in aa_list],
+        results = await asyncio.gather(*[update_aa(api=api, org_id=org_id, aa=aa, menu=menu, greeting=greeting,
+                                                   test=test, re_upload=re_upload)
+                                         for aa in aa_list],
                                        return_exceptions=True)
         # print results
         print(file=sys.stderr)
