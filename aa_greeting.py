@@ -85,6 +85,9 @@ async def upload_aa_greeting(*, access_token: str, org_id: str, location_id: str
 
 @dataclass
 class AAPicker:
+    """
+    Helper class to pick a list of auto attendants based ond on a list of AA specs as arguments to the script
+    """
     api: AsWebexSimpleApi = field(repr=False)
     aa_specs: list[str]
     # cached list of locations
@@ -95,7 +98,6 @@ class AAPicker:
     async def locations(self) -> list[Location]:
         """
         Get (cached) list of locations. If no cached list exist, then get list of location from Webex
-        :return:
         """
         async with self._locations_lock:
             if not self._locations:
@@ -109,9 +111,11 @@ class AAPicker:
         """
         location_and_aa = spec.split(':')
         if len(location_and_aa) == 1:
+            # AA name (regex) only
             aa_spec = location_and_aa[0]
             location_id = None
         elif len(location_and_aa) == 2:
+            # location name and AA name (regex)
             location_spec, aa_spec = location_and_aa
             # find location
             location = next((loc for loc in await self.locations()
@@ -137,12 +141,14 @@ class AAPicker:
         """
         Get list of AutoAttendant instances based on provided AA specs
         """
+        # pick list of AAs for each spec provided
         results = await asyncio.gather(*[self.pick_one_spec(spec)
                                          for spec in self.aa_specs],
                                        return_exceptions=True)
         exc = next((r for r in results if isinstance(r, Exception)), None)
         if exc:
-            # is there an exception other than a KeyError?
+            # is there an exception other than a KeyError? If that's the case then we need to (re-)raise the exception
+            # KeyError is an indication of an error caught already
             exc = next((r for r in results if isinstance(r, Exception) and not isinstance(r, KeyError)), None)
             if exc:
                 raise exc
