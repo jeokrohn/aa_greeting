@@ -2,19 +2,27 @@
 """
 Update greeting settings for a number of auto attendants
 
-    usage: aa_greeting.py [-h] [--token TOKEN] menu greeting ...
+    usage: aa_greeting.py [-h] [--token TOKEN] [--test] [--reupload]
+                          {business,after_hours} greeting ...
 
     positional arguments:
-      menu           "business" or "after_hours"
-      greeting       greeting file or "default"
-      aaname         name of AA to modify. An be a tuple with location name and AA name like "location:aa1". Also the AA name can be a regular expression.
-                     For example "location:.*" would catch all AAs in given location. Multiple AA name specs can be given.
+      {business,after_hours}
+                            "business" or "after_hours"
+      greeting              greeting file or "default"
+      aaname                name of AA to modify. An be a tuple with location name
+                            and AA name like "location:aa1". Also the AA name can
+                            be a regular expression. For example "location:.*"
+                            would catch all AAs in given location. Multiple AA
+                            name specs can be given.
 
     options:
-      -h, --help     show this help message and exit
-      --token TOKEN  access token. If not provided will be read from "WEBEX_TOKEN environment variable.
-      --test         Don't apply changes
-      --reupload     re-upload greeting even if greeting with same name already exists.
+      -h, --help            show this help message and exit
+      --token TOKEN         access token. If not provided will be read from
+                            "WEBEX_TOKEN environment variable.
+      --test                Don't apply changes
+      --reupload            re-upload greeting even if greeting with same name
+                            already exists.
+
 """
 import argparse
 import asyncio
@@ -221,7 +229,7 @@ async def main():
     parser.add_argument('--test', action='store_true', help='Don\'t apply changes')
     parser.add_argument('--reupload', action='store_true', help='re-upload greeting even if greeting with same name '
                                                                 'already exists.')
-    parser.add_argument('menu', type=str, help='"business" or "after_hours"')
+    parser.add_argument('menu', type=str.lower, help='"business" or "after_hours"', choices=['business', 'after_hours'])
     parser.add_argument('greeting', type=str, help='greeting file or "default"')
     parser.add_argument('aaname', type=str, help='name of AA to modify. An be a tuple with location name and AA name '
                                                  'like "location:aa1". Also the AA name can be a regular expression. '
@@ -241,9 +249,6 @@ async def main():
     re_upload = args.reupload
 
     menu = args.menu.lower()
-    if menu not in ('business', 'after_hours'):
-        print(f'Invalid argument for menu "{menu}". Allowed: business, after_hours', file=sys.stderr)
-        exit(1)
 
     greeting = args.greeting
     if greeting.lower() == 'default':

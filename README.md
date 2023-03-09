@@ -2,20 +2,27 @@
 
 This script can be used to update business hours of after hours greeting settings for a set of given auto attendants.
     
-    usage: aa_greeting.py [-h] [--token TOKEN] menu greeting ...
-
+    usage: aa_greeting.py [-h] [--token TOKEN] [--test] [--reupload]
+                          {business,after_hours} greeting ...
+    
     positional arguments:
-      menu           "business" or "after_hours"
-      greeting       greeting file or "default"
-      aaname         name of AA to modify. An be a tuple with location name and AA name like "location:aa1". Also the AA name can be a regular expression.
-                     For example "location:.*" would catch all AAs in given location. Multiple AA name specs can be given.
+      {business,after_hours}
+                            "business" or "after_hours"
+      greeting              greeting file or "default"
+      aaname                name of AA to modify. An be a tuple with location name
+                            and AA name like "location:aa1". Also the AA name can
+                            be a regular expression. For example "location:.*"
+                            would catch all AAs in given location. Multiple AA
+                            name specs can be given.
     
     options:
-      -h, --help     show this help message and exit
-      --token TOKEN  access token. If not provided will be read from "WEBEX_TOKEN environment variable.
-      --test         Don't apply changes
-      --reupload     re-upload greeting even if greeting with same name already exists.
-    
+      -h, --help            show this help message and exit
+      --token TOKEN         access token. If not provided will be read from
+                            "WEBEX_TOKEN environment variable.
+      --test                Don't apply changes
+      --reupload            re-upload greeting even if greeting with same name
+                            already exists.
+
 ## Authorization
 
 The script uses an undocumented endpoint to upload auto attendant greetings. This endpoint requires an access token 
